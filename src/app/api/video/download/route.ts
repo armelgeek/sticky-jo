@@ -41,12 +41,7 @@ export async function GET(request: NextRequest) {
     const videoBuffer = await readFile(status.outputPath);
 
     // Return video file with proper type
-    const arrayBuffer = videoBuffer.buffer.slice(
-      videoBuffer.byteOffset,
-      videoBuffer.byteOffset + videoBuffer.byteLength
-    );
-    
-    return new NextResponse(arrayBuffer, {
+    return new NextResponse(new Uint8Array(videoBuffer), {
       headers: {
         "Content-Type": "video/mp4",
         "Content-Disposition": `attachment; filename="stick-figure-${jobId}.mp4"`,

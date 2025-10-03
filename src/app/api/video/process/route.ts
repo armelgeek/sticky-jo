@@ -29,18 +29,17 @@ export async function POST(request: NextRequest) {
     // Start processing (async)
     const outputDir = path.join(process.cwd(), "public", "temp", "output");
     
+    // Use fileId as jobId for consistency
+    const jobId = fileId;
+    
     // Start processing in background
-    processVideo(inputPath, outputDir)
-      .then((jobId) => {
-        console.log(`Video processing completed with job ID: ${jobId}`);
+    processVideo(inputPath, outputDir, jobId)
+      .then((returnedJobId) => {
+        console.log(`Video processing completed with job ID: ${returnedJobId}`);
       })
       .catch((error) => {
         console.error("Video processing error:", error);
       });
-
-    // Return immediately with job ID
-    // In a real system, you'd use a job queue
-    const jobId = fileId; // Use fileId as jobId for simplicity
 
     return NextResponse.json({
       success: true,
