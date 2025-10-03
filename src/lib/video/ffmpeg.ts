@@ -3,9 +3,18 @@
  * Handles frame extraction, audio extraction, and video assembly
  */
 
-import ffmpeg from "fluent-ffmpeg";
+import ffmpegStatic from "fluent-ffmpeg";
 import { promises as fs } from "fs";
 import path from "path";
+
+// Configure FFmpeg paths
+const ffmpegPath = process.env.FFMPEG_PATH || "ffmpeg";
+const ffprobePath = process.env.FFPROBE_PATH || "ffprobe";
+
+ffmpegStatic.setFfmpegPath(ffmpegPath);
+ffmpegStatic.setFfprobePath(ffprobePath);
+
+const ffmpeg = ffmpegStatic;
 
 export interface VideoMetadata {
   duration: number;

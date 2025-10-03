@@ -7,10 +7,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "100mb",
     },
   },
-  // Disable body parser for API routes to handle file uploads
-  api: {
-    bodyParser: false,
-  },
 };
 
 export default nextConfig;
