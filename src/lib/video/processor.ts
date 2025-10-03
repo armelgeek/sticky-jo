@@ -52,9 +52,10 @@ function updateStatus(
  */
 export async function processVideo(
   inputVideoPath: string,
-  outputDir: string
+  outputDir: string,
+  providedJobId?: string
 ): Promise<string> {
-  const jobId = uuidv4();
+  const jobId = providedJobId || uuidv4();
   
   processingJobs.set(jobId, {
     id: jobId,
