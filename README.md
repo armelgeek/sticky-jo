@@ -1,36 +1,225 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Stick Figure Video Generator
+
+Transform your videos into minimalist stick figure animations with synchronized lip movements on a clean white background.
+
+## Features
+
+- **Easy Upload**: Drag and drop video files or browse to select (supports MP4, MOV, AVI)
+- **AI-Powered Pose Detection**: Uses MediaPipe to extract body movements from video frames
+- **Stick Figure Generation**: Creates simple, clean stick figure animations on white background
+- **Lip Sync**: Synchronizes mouth movements with audio
+- **Video Processing**: Reassembles frames with audio into final MP4 video
+- **Real-time Progress**: Track processing status with live progress updates
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TailwindCSS 4
+- **Backend**: Next.js API Routes (Node.js runtime)
+- **Video Processing**: FFmpeg for frame extraction and video assembly
+- **Pose Estimation**: MediaPipe for body keypoint detection
+- **Drawing**: node-canvas for stick figure rendering
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 20 or higher
+- FFmpeg installed on your system
+
+#### Installing FFmpeg
+
+**macOS:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+brew install ffmpeg
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install ffmpeg
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Windows:**
+Download from [ffmpeg.org](https://ffmpeg.org/download.html) and add to PATH
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation
 
-## Learn More
+1. Clone the repository:
+```bash
+git clone https://github.com/armelgeek/sticky-jo.git
+cd sticky-jo
+```
 
-To learn more about Next.js, take a look at the following resources:
+2. Install dependencies:
+```bash
+npm install
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Deploy on Vercel
+## Usage
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Upload Video**: Click or drag-and-drop your video file (max 100MB)
+2. **Wait for Processing**: The system will:
+   - Extract frames from your video
+   - Detect body poses in each frame
+   - Generate stick figure animations
+   - Synchronize mouth movements with audio
+   - Reassemble everything into final video
+3. **Preview & Download**: Watch the result and download your stick figure video
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── api/
+│   │   └── video/
+│   │       ├── upload/     # Video upload endpoint
+│   │       ├── process/    # Start processing job
+│   │       ├── status/     # Check processing status
+│   │       └── download/   # Download processed video
+│   ├── page.tsx            # Main application page
+│   └── layout.tsx          # Root layout
+├── components/
+│   ├── VideoUpload.tsx     # File upload UI
+│   ├── ProgressIndicator.tsx  # Processing progress
+│   └── VideoPreview.tsx    # Video preview and download
+└── lib/
+    └── video/
+        ├── ffmpeg.ts          # FFmpeg utilities
+        ├── poseEstimation.ts  # MediaPipe integration
+        ├── stickFigure.ts     # Stick figure drawing
+        ├── audioAnalysis.ts   # Lip sync logic
+        └── processor.ts       # Main processing pipeline
+```
+
+## Configuration
+
+### Video Settings
+
+Edit `/src/lib/video/processor.ts` to customize:
+
+- **FPS**: Change `targetFps` (default: 10)
+- **Resolution**: Modify in `stickFigure.ts` (default: 512x512)
+
+### Upload Limits
+
+Edit `/next.config.ts` to adjust:
+
+- **Max file size**: Currently 100MB
+
+## API Endpoints
+
+### POST /api/video/upload
+Upload a video file
+
+**Request:** multipart/form-data with `video` field
+
+**Response:**
+```json
+{
+  "success": true,
+  "fileId": "uuid",
+  "filename": "uuid.mp4",
+  "filepath": "/path/to/file"
+}
+```
+
+### POST /api/video/process
+Start processing a video
+
+**Request:**
+```json
+{
+  "fileId": "uuid",
+  "filename": "uuid.mp4"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "jobId": "uuid",
+  "message": "Video processing started"
+}
+```
+
+### GET /api/video/status?jobId=uuid
+Get processing status
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "status": "processing",
+  "progress": 45,
+  "message": "Processing frame 12/30..."
+}
+```
+
+### GET /api/video/download?jobId=uuid
+Download processed video (returns MP4 file)
+
+## Limitations
+
+- Maximum video size: 100MB
+- Recommended video length: 10-30 seconds
+- Processing time: ~2-5 minutes for 10-second video
+- Single person pose detection only
+- Simplified lip sync (rhythm-based)
+
+## Development
+
+### Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+### Type Checking
+
+```bash
+npx tsc --noEmit
+```
+
+## Troubleshooting
+
+### FFmpeg not found
+Ensure FFmpeg is installed and in your system PATH
+
+### Out of memory
+Reduce video length or resolution in processor settings
+
+### Pose detection fails
+Ensure person is clearly visible in video frames
+
+## Future Improvements
+
+- Multiple person support
+- Advanced audio analysis for better lip sync
+- Custom stick figure styling options
+- Batch processing
+- Video preview before processing
+- Progress persistence across page refreshes
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
