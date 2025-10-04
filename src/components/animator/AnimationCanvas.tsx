@@ -2,17 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PoseKeypoints } from "@/lib/video/poseEstimation";
+import { drawEnhancedCharacter } from "@/lib/character/drawing";
+import { CharacterStyle, CharacterState } from "@/lib/character/types";
 
 interface AnimationCanvasProps {
   pose: PoseKeypoints | null;
   onPoseChange?: (pose: PoseKeypoints) => void;
   isEditable?: boolean;
+  characterStyle?: Partial<CharacterStyle>;
+  characterState?: Partial<CharacterState>;
 }
 
 export default function AnimationCanvas({ 
   pose, 
   onPoseChange,
-  isEditable = false 
+  isEditable = false,
+  characterStyle = {},
+  characterState = {}
 }: AnimationCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [draggingPoint, setDraggingPoint] = useState<keyof PoseKeypoints | null>(null);
@@ -28,14 +34,14 @@ export default function AnimationCanvas({
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw stick figure
-    drawStickFigure(ctx, pose, canvas.width, canvas.height);
+    // Draw enhanced stick figure
+    drawEnhancedCharacter(ctx, pose, canvas.width, canvas.height, characterStyle, characterState);
 
     // Draw control points if editable
     if (isEditable) {
       drawControlPoints(ctx, pose, canvas.width, canvas.height);
     }
-  }, [pose, isEditable]);
+  }, [pose, isEditable, characterStyle, characterState]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isEditable || !pose) return;
@@ -104,7 +110,8 @@ export default function AnimationCanvas({
   );
 }
 
-function drawStickFigure(
+// Keep the old simple drawing for reference, but not used anymore
+/* function drawStickFigure(
   ctx: CanvasRenderingContext2D,
   pose: PoseKeypoints,
   width: number,
@@ -213,6 +220,7 @@ function drawStickFigure(
   ctx.lineTo(rightAnkle.x, rightAnkle.y);
   ctx.stroke();
 }
+*/
 
 function drawControlPoints(
   ctx: CanvasRenderingContext2D,

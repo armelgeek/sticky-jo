@@ -7,6 +7,8 @@ import Timeline from "@/components/animator/Timeline";
 import Controls from "@/components/animator/Controls";
 import ExportPanel from "@/components/animator/ExportPanel";
 import { PoseKeypoints } from "@/lib/video/poseEstimation";
+import { CharacterState, DEFAULT_STATE } from "@/lib/character/types";
+import { ANIMATION_PRESETS } from "@/lib/character/presets";
 
 export interface Keyframe {
   id: string;
@@ -20,6 +22,7 @@ export default function AnimatorPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedKeyframeId, setSelectedKeyframeId] = useState<string | null>(null);
   const [duration, setDuration] = useState(5000); // 5 seconds default
+  const [characterState, setCharacterState] = useState<CharacterState>(DEFAULT_STATE);
 
   const addKeyframe = (pose: PoseKeypoints) => {
     const newKeyframe: Keyframe = {
@@ -61,6 +64,20 @@ export default function AnimatorPage() {
     return interpolatePose(before.pose, after.pose, t);
   };
 
+  const loadAnimationPreset = (presetName: keyof typeof ANIMATION_PRESETS) => {
+    const preset = ANIMATION_PRESETS[presetName]();
+    const frameDuration = duration / preset.length;
+    
+    const newKeyframes = preset.map((frame, index) => ({
+      id: `keyframe-${Date.now()}-${index}`,
+      time: index * frameDuration,
+      pose: frame.pose,
+    }));
+    
+    setKeyframes(newKeyframes);
+    setSelectedKeyframeId(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -95,11 +112,191 @@ export default function AnimatorPage() {
                 }
               }}
               isEditable={selectedKeyframeId !== null}
+              characterState={characterState}
             />
           </div>
 
           {/* Right Panel - Controls */}
           <div className="w-80 bg-gray-800 border-l border-gray-700 p-4 overflow-y-auto">
+            {/* Character Controls */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3">Character</h3>
+              
+              {/* Scale */}
+              <div className="mb-4">
+                <label className="block text-sm text-gray-400 mb-1">Scale</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={characterState.scale}
+                  onChange={(e) => setCharacterState({ ...characterState, scale: parseFloat(e.target.value) })}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{characterState.scale.toFixed(1)}x</span>
+              </div>
+
+              {/* Flip */}
+              <div className="mb-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={characterState.flip}
+                    onChange={(e) => setCharacterState({ ...characterState, flip: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Flip Horizontally</span>
+                </label>
+              </div>
+
+              {/* Expression */}
+              <div className="mb-4">
+                <label className="block text-sm text-gray-400 mb-1">Eye Expression</label>
+                <select
+                  value={characterState.eyeExpression}
+                  onChange={(e) => setCharacterState({ 
+                    ...characterState, 
+                    eyeExpression: e.target.value as CharacterState['eyeExpression']
+                  })}
+                  className="w-full bg-gray-700 text-white rounded px-2 py-1 text-sm"
+                >
+                  <option value="normal">Normal</option>
+                  <option value="happy">Happy</option>
+                  <option value="angry">Angry</option>
+                  <option value="sad">Sad</option>
+                  <option value="shocked">Shocked</option>
+                  <option value="bored">Bored</option>
+                </select>
+              </div>
+
+              {/* Mouth Expression */}
+              <div className="mb-4">
+                <label className="block text-sm text-gray-400 mb-1">Mouth</label>
+                <select
+                  value={characterState.mouthExpression}
+                  onChange={(e) => setCharacterState({ 
+                    ...characterState, 
+                    mouthExpression: e.target.value as CharacterState['mouthExpression']
+                  })}
+                  className="w-full bg-gray-700 text-white rounded px-2 py-1 text-sm"
+                >
+                  <option value="smile">Smile</option>
+                  <option value="frown">Frown</option>
+                  <option value="neutral">Neutral</option>
+                  <option value="surprised">Surprised</option>
+                  <option value="angry">Angry</option>
+                </select>
+              </div>
+
+              {/* Eyes Open/Closed */}
+              <div className="mb-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={characterState.eyesOpen}
+                    onChange={(e) => setCharacterState({ ...characterState, eyesOpen: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Eyes Open</span>
+                </label>
+              </div>
+
+              {/* Head Tilt */}
+              <div className="mb-4">
+                <label className="block text-sm text-gray-400 mb-1">Head Tilt</label>
+                <input
+                  type="range"
+                  min="-1"
+                  max="1"
+                  step="0.1"
+                  value={characterState.headTilt}
+                  onChange={(e) => setCharacterState({ ...characterState, headTilt: parseFloat(e.target.value) })}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{characterState.headTilt > 0 ? 'Right' : characterState.headTilt < 0 ? 'Left' : 'Center'}</span>
+              </div>
+            </div>
+
+            {/* Animation Presets */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3">Animation Presets</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => loadAnimationPreset('walking_cycle')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Walking
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('running')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Running
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('jump')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Jump
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('punch')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Punch
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('happy')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Happy
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('sad')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Sad
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('angry')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Angry
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('shocked')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Shocked
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('sleeping')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Sleeping
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('phone')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Phone
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('winner')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  Winner
+                </button>
+                <button
+                  onClick={() => loadAnimationPreset('normal')}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                >
+                  T-Pose
+                </button>
+              </div>
+            </div>
+
             <Controls
               keyframes={keyframes}
               selectedKeyframeId={selectedKeyframeId}
