@@ -7,6 +7,21 @@ import { PoseLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { promises as fs } from "fs";
 import { createCanvas, loadImage, Image } from "canvas";
 
+// Polyfill for document object in Node.js environment
+// MediaPipe requires a document global for certain operations
+if (typeof document === "undefined") {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global as any).document = {
+    createElement: () => ({
+      getContext: () => null,
+    }),
+    createElementNS: () => ({}),
+    documentElement: {
+      style: {},
+    },
+  };
+}
+
 export interface PoseKeypoints {
   nose: { x: number; y: number };
   leftShoulder: { x: number; y: number };
